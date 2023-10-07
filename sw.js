@@ -79,8 +79,8 @@ function concatenateAll(arrays) {
 self.addEventListener("fetch", (event) => {
     const matches = event.request.url.match(urlPattern)
     if (matches) {
-        const url = event.request.url.replace("pilipili", "githubusercontent")
         event.respondWith((async () => {
+            const url = event.request.url.replace("pilipili", "githubusercontent")
             if (url.endsWith("m3u8")) {
                 const m3u8 = new TextEncoder().encode(await (await fetch(url, {})).text())
 
