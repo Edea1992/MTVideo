@@ -102,7 +102,7 @@ self.addEventListener("fetch", (event) => {
                                 "Accept-Ranges": "bytes",
                                 "Content-Length": chunkSize,
                                 "Content-Range": `bytes ${start}-${end}/${m3u8.byteLength}`,
-                                "Content-Type": "application/vnd.apple.mpegurl"
+                                "Content-Type": "application/x-mpegURL"
                             },
                             status: 206
                         }
