@@ -42,7 +42,7 @@
 //     }
 // })
 
-const urlPattern = /https:\/\/raw\.pilipili\.com\/Edea1992\/52030101-36fb-4cdd-beb7-420b9a8dbb9b\/main\/\d+/
+const urlPattern = /https:\/\/raw\.pilipili\.com\/Edea1992\/52030101-36fb-4cdd-beb7-420b9a8dbb9b\/main\/.+/
 const contentRangePattern = /bytes \d+-\d+\/(\d+)/
 
 self.addEventListener("install", () => {
@@ -81,6 +81,51 @@ self.addEventListener("fetch", (event) => {
     if (matches) {
         const url = event.request.url.replace("pilipili", "githubusercontent")
         event.respondWith((async () => {
+            if (url.endsWith("m3u8")) {
+                const m3u8 = new TextEncoder().encode(await (await fetch(url, {})).text())
+
+                const range = event.request.headers.get("Range")
+                if (range) {
+                    const parts = range.replace("bytes=", "").split("-")
+                    const start = parseInt(parts[0], 10)
+                    const end = parts[1] ? parseInt(parts[1], 10) : m3u8.byteLength - 1
+                    const chunk = m3u8.slice(start, end + 1)
+                    return new Response(
+                        new ReadableStream({
+                            start(controller) {
+                                controller.enqueue(chunk)
+                                controller.close()
+                            }
+                        }),
+                        {
+                            headers: {
+                                "Accept-Ranges": "bytes",
+                                "Content-Length": chunkSize,
+                                "Content-Range": `bytes ${start}-${end}/${m3u8.byteLength}`,
+                                "Content-Type": "application/x-mpegURL"
+                            },
+                            status: 206
+                        }
+                    )
+                }
+
+                return new Response(
+                    new ReadableStream({
+                        start(controller) {
+                            controller.enqueue(m3u8)
+                            controller.close()
+                        }
+                    }),
+                    {
+                        headers: {
+                            "Accept-Ranges": "bytes",
+                            "Content-Length": m3u8.byteLength,
+                            "Content-Type": "application/x-mpegURL"
+                        }
+                    }
+                )
+            }
+            
             const promises = []
 
             for (let i = 0; i < 32; i++) {
@@ -94,7 +139,6 @@ self.addEventListener("fetch", (event) => {
                 const parts = range.replace("bytes=", "").split("-")
                 const start = parseInt(parts[0], 10)
                 const end = parts[1] ? parseInt(parts[1], 10) : bytes.byteLength - 1
-                const chunkSize = end - start + 1
                 const chunk = bytes.slice(start, end + 1)
                 return new Response(
                     new ReadableStream({
@@ -106,7 +150,7 @@ self.addEventListener("fetch", (event) => {
                     {
                         headers: {
                             "Accept-Ranges": "bytes",
-                            "Content-Length": chunkSize,
+                            "Content-Length": chunk.byteLength,
                             "Content-Range": `bytes ${start}-${end}/${bytes.byteLength}`,
                             "Content-Type": "video/mp2t"
                         },
