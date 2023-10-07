@@ -100,7 +100,7 @@ self.addEventListener("fetch", (event) => {
                         {
                             headers: {
                                 "Accept-Ranges": "bytes",
-                                "Content-Length": chunkSize,
+                                "Content-Length": chunk.byteLength,
                                 "Content-Range": `bytes ${start}-${end}/${m3u8.byteLength}`,
                                 "Content-Type": "application/x-mpegURL"
                             },
