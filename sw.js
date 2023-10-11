@@ -42,7 +42,7 @@
 //     }
 // })
 
-const urlPattern = /https:\/\/raw\.pilipili\.com\/Edea1992\/52030101-36fb-4cdd-beb7-420b9a8dbb9b\/main\/.+/
+const urlPattern = /https:\/\/raw\.pilipili\.com\/Edea1992\/[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}\/main\/.+/
 const contentRangePattern = /bytes \d+-\d+\/(\d+)/
 
 self.addEventListener("install", () => {
