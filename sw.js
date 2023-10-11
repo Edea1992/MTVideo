@@ -55,9 +55,26 @@ self.addEventListener("activate", function (event) {
     )
 })
 
+function fetchM3U8(url) {
+    return new Promise(resolve => {
+        const retry = () => fetch(url).then(async response => {
+            if (response.status !== 200 && response.status !== 206) {
+                retry()
+            }
+            resolve(await response.text())
+        }).catch(retry)
+        retry()
+    })
+}
+
 function fetchWithRetry(url) {
     return new Promise(resolve => {
-        const retry = () => fetch(url).then(async response => resolve(new Uint8Array(await response.arrayBuffer()))).catch(retry)
+        const retry = () => fetch(url).then(async response => {
+            if (response.status !== 200 && response.status !== 206) {
+                retry()
+            }
+            resolve(new Uint8Array(await response.arrayBuffer()))
+        }).catch(retry)
         retry()
     })
 }
@@ -82,7 +99,7 @@ self.addEventListener("fetch", (event) => {
         event.respondWith((async () => {
             const url = event.request.url.replace("pilipili", "githubusercontent")
             if (url.endsWith("m3u8")) {
-                const m3u8 = new TextEncoder().encode(await (await fetch(url, {})).text())
+                const m3u8 = new TextEncoder().encode(await fetchM3U8(url))
 
                 const range = event.request.headers.get("Range")
                 if (range) {
